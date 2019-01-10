@@ -1,66 +1,58 @@
-import fetch, { Response, Headers } from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import { get } from 'lodash';
 import { ScrapOptions, ScrapFlow, ScrapHeaders } from "./options";
 
-const options: ScrapOptions = {
-  domain: 'https://sandbox-api.coinmarketcap.com',
-  headers: {
-    'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
-  },
-  flows: [
-    {
-      id: 'listings',
-      url: '/v1/cryptocurrency/listings/latest?start=1&limit=4&convert=USD',
-      method: 'GET',
-      body: undefined,
-      headers: {},
-    },
-    {
-      id: 'info',
-      url: '/v1/cryptocurrency/info?id={listings.data[0].id}',
-      method: 'GET',
-      body: undefined,
-      headers: {},
-    },
-    // {
-    //   id: 'call2',
-    //   url: '/call2/{call1.level1.level2}',
-    //   method: 'POST',
-    //   body: {},
-    //   headers: {},
-    // },
-    // {
-    //   id: 'call3',
-    //   url: '/call3/{call1.level1.level2}/sub-call-3',
-    //   method: 'PUT',
-    //   body: {},
-    //   headers: {},
-    // },
-  ],
-};
+const PARAM_REGEX = /{(.+?)}/g;
+
+const options: ScrapOptions = require('./options-config').options;
 
 const assertValidOptions = (options: ScrapOptions) => !!options;
 
 const parseUrl = (url: string, options: ScrapOptions) => {
 
-  const paramRegex = /{(.+?)}/g;
   let requestUrl = `${options.domain || ''}${url}`;
 
-  requestUrl = requestUrl.replace(paramRegex, (match: string, param: string) => {
+  requestUrl = requestUrl.replace(PARAM_REGEX, (match: string, param: string) => {
     const paramParts = param.split('.');
     const callId = paramParts[0];
     const bodyPath = paramParts.slice(1).join('.');
 
-    const pathString = `${callId}.jsonResponse.${bodyPath}`;
+    const pathString = `${callId}.responseBody.${bodyPath}`;
 
     return `${get(calls, pathString)}`;
   });
 
   return requestUrl;
 };
-const parseBody = (body: any, options: ScrapOptions) => body;
-const parseHeaders = (headers: ScrapHeaders, options: ScrapOptions) => ({ ...options.headers, ...headers });
+const parseBody = (body: any, options: ScrapOptions): string => {
 
+  if (!body) return body;
+
+  // TODO: Move the param regex and replace logic to seperate function and join with the `parseUrl` function
+  const paramRegex = /"?{(.+?)}"?/g;
+  // Also move to using a traversal strategy instead of string replace
+  let bodyString = JSON.stringify(body, undefined, 2);
+
+  bodyString = bodyString.replace(paramRegex, (match: string, param: string) => {
+    const paramParts = param.split('.');
+    const callId = paramParts[0];
+    const bodyPath = paramParts.slice(1).join('.');
+
+    const pathString = `${callId}.responseBody.${bodyPath}`;
+    const pathValue = get(calls, pathString);
+
+    if (typeof pathValue === 'string') {
+      return `"${pathValue}"`;
+    }
+
+    return JSON.stringify(pathValue, undefined, 2);
+  });
+
+  // console.log(bodyString);
+
+  return bodyString;
+};
+const parseHeaders = (headers: ScrapHeaders, options: ScrapOptions) => ({ ...options.headers, ...headers });
 
 // Ensure options are valid.
 assertValidOptions(options);
@@ -70,48 +62,56 @@ console.clear();
 const calls: {
   [callId: string]: {
     response?: Response,
-    jsonResponse?: any,
+    // requestBody?: any,
+    responseBody?: any,
   };
 } = {};
 
-options.flows
-  .reduce((previousCall: PromiseLike<PromiseLike<Response> | undefined>, flow: ScrapFlow) => {
-    
-    const id = flow.id;
+const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, flow: ScrapFlow) => {
 
-    calls[id] = {};
+  const id = flow.id;
 
-    return previousCall
-      .then(() => {
+  calls[id] = {};
 
-        const method = flow.method;
-        const url = parseUrl(flow.url, options);
-        const body = parseBody(flow.body, options);
-        const headers: any = parseHeaders(flow.headers, options);
-
-        return fetch(url, {
-          method,
-          body,
-          headers,
-        })
-          .then((response: Response) => {
-            calls[id].response = response;
-
-            return response.json()
-              .then((jsonResponse: any) => {
-
-                calls[id].jsonResponse = jsonResponse;
-                console.log(JSON.stringify(jsonResponse, undefined, 2));
-                console.log('#################################################################################################################');
-                console.log('#################################################################################################################');
-                console.log('#################################################################################################################');
-
-                return response;
-              });
-          });
-      });
-  }, Promise.resolve(undefined) as any)
+  return previousCall
     .then(() => {
-      console.log('DONE');
-      console.log(calls);
+
+      const method = flow.method;
+      const url = parseUrl(flow.url, options);
+      const body: string = parseBody(flow.body, options);
+      const headers: any = parseHeaders(flow.headers, options);
+
+      console.log(`${method}: ${url}`);
+      // TODO: Handle `[]` parameters by going through all sub urls.
+
+      // calls[id].requestBody = body;
+
+      return fetch(url, {
+        method,
+        body,
+        headers,
+      })
+        .then((response: Response) => {
+          calls[id].response = response;
+
+          return response.json()
+            .then((responseBody: any) => {
+
+              calls[id].responseBody = responseBody;
+              console.log(JSON.stringify(responseBody, undefined, 2));
+              console.log('#################################################################################################################');
+              console.log('#################################################################################################################');
+              console.log('#################################################################################################################');
+
+              return response;
+            });
+        });
     });
+};
+
+options.flows
+  .reduce(fetchApi, Promise.resolve(undefined) as any)
+  .then(() => {
+    // console.log('DONE');
+    // console.log(calls);
+  });
