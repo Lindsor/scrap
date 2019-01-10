@@ -1,0 +1,21 @@
+{
+  "name": "scrap",
+  "version": "0.0.0",
+  "description": "",
+  "main": "build/scrap.js",
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "start": "clear && npm run build && node ./build/scrap.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/lodash": "4.14.119",
+    "@types/node-fetch": "2.1.4",
+    "typescript": "3.2.2"
+  },
+  "dependencies": {
+    "lodash": "4.17.11",
+    "node-fetch": "2.3.0"
+  }
+}
