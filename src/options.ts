@@ -7,7 +7,6 @@ export declare type ScrapHeaders = {
 };
 
 export declare type ScrapFlow = {
-  id: string;
   url: string;
   method: ScrapMethod;
   query?: {
@@ -17,10 +16,14 @@ export declare type ScrapFlow = {
   headers?: ScrapHeaders;
 };
 
+export declare type ScrapFlows = {
+  [flowId: string]: ScrapFlow;
+};
+
 export declare type ScrapOptions = {
   domain?: string;
   headers: ScrapHeaders;
-  flows: ScrapFlow[];
+  flows: ScrapFlows;
 };
 
 

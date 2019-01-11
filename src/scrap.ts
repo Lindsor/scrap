@@ -19,21 +19,24 @@ const assertValidOptions = (options: ScrapOptions) => {
     throw new Error(`Pleade do not at a pathName to the 'options.domain'. ${options.domain}`);
   }
 
-  if (!options.flows || !options.flows.length) {
+  if (
+    !options.flows ||
+    !Object.keys(options.flows).length
+  ) {
     throw new Error('options.flows must be declared');
   }
 
   const ids: string[] = [];
 
-  options.flows
-    .forEach((flow: ScrapFlow) => {
+  Object.entries(options.flows)
+    .forEach(([id, flow]: [string, ScrapFlow]) => {
 
       if (flow.url.includes('?')) {
         throw new Error(`Url cannot have query parameters in the url. Please set through the "query" property.\n${flow.url}`);
       }
 
-      if (ids.includes(flow.id)) {
-        throw new Error(`There cannot be duplicate id properties. Please rename ${flow.id}`);
+      if (ids.includes(id)) {
+        throw new Error(`There cannot be duplicate id properties. Please rename ${id}`);
       }
     });
 };
@@ -110,9 +113,10 @@ const calls: {
   };
 } = {};
 
-const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, flow: ScrapFlow) => {
-
-  const id = flow.id;
+const fetchApi = (
+  previousCall: PromiseLike<PromiseLike<Response> | undefined>,
+  [id, flow]: [string, ScrapFlow],
+) => {
 
   calls[id] = {
     flow,
@@ -159,7 +163,7 @@ const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, 
     });
 };
 
-options.flows
+Object.entries(options.flows)
   .reduce(fetchApi, Promise.resolve(undefined) as any)
   .then(() => {
     console.log('DONE');
