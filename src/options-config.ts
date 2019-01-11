@@ -1,7 +1,168 @@
-import { ScrapOptions } from "./options";
+import { ScrapOptions, ScrapFlow } from "./options";
+
+const users = [
+  'situser002',
+  // 'marceloluz',
+  // 'situser005',
+];
+
+const userFlows: ScrapFlow[] = [];
+
+users
+  .forEach((userName: string) => {
+
+    const customerId = `${userName}.data[0].customer.cisNumber`;
+
+    [
+      {
+        id: userName,
+        url: `/banking/bhobssa/www/api/us-banking/admin/customers`,
+        method: 'POST',
+        body: {
+          searchQuery: userName,
+        },
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}Eligibility`,
+        url: `/banking/bhobssa/www/api/us-banking/enrollment/agent/assisted-channel-eligibility`,
+        method: 'POST',
+        body: {},
+        headers: {},
+        query: {
+          customerId: `{${ customerId }}`,
+        },
+      },
+      {
+        id: `${userName}AccessControlls`,
+        url: `/banking/bhobssa/www/api/us-banking/admin/agents-access-controls`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: {
+          customerId: `{${customerId}}`,
+        },
+      },
+      {
+        id: `${userName}ContactPreferences`,
+        url: `/banking/bhobssa/www/api/us-banking/notification/agent/contact-preferences/{${customerId}}`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: {
+          includePush: true,
+          bookOfRecord: true,
+        },
+      },
+      {
+        id: `${userName}AlertSubscriptionsGet`,
+        url: `/banking/bhobssa/www/api/us-banking/notification/agent/alert-subscriptions/{${customerId}}`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}AlertSubscriptionsPut`,
+        url: `/banking/bhobssa/www/api/us-banking/notification/agent/alert-subscriptions/{${customerId}}`,
+        method: 'PUT',
+        body: [
+          {
+            "props": `{${userName}AlertSubscriptionsGet.data[0].props}`,
+            "subscriptionId": `{${userName}AlertSubscriptionsGet.data[0].subscriptionId}`,
+            "alertTypeId": `{${userName}AlertSubscriptionsGet.data[0].alertTypeId}`,
+            "communicationProfileId": `{${userName}AlertSubscriptionsGet.data[0].communicationProfileId}`,
+            "deliveryTarget": `{${userName}AlertSubscriptionsGet.data[0].deliveryTarget}`,
+            "changeToken": "828fe939-779c-4643-8bd8-5c7202aceb71",
+            "subscriptionSearchKey": `{${userName}AlertSubscriptionsGet.data[0].subscriptionSearchKey}`,
+          }
+        ],
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}AccountsGet`,
+        url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/accounts`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}AccountDetailsGet`,
+        url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/account/{${userName}AccountsGet.data[0].accounts[0].accountId}`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}PreferencesGet`,
+        url: `/banking/bhobssa/www/api/us-banking/preference/agent/preferences/{${customerId}}`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}TransactionTypesGet`,
+        url: `/banking/bhobssa/www/api/us-banking/transaction/agent/transactions/types`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}TransactionTypesGet`,
+        url: `/banking/bhobssa/www/api/us-banking/transaction/agent/{${customerId}}/accounts/{${userName}AccountsGet.data[0].accounts[0].accountId}/transactions`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: {
+          startDate: '2017-07-10',
+          endDate: '2019-01-10',
+        },
+      },
+      {
+        id: `${userName}EntitlementsGet`,
+        url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/accounts/{${userName}AccountsGet.data[0].accounts[0].accountId}/entitlement`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: undefined,
+      },
+      {
+        id: `${userName}AuditGet`,
+        url: `/banking/bhobssa/www/api/us-banking/admin/profile-audit`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: {
+          startDate: '2019-01-03T18:00:00.000Z',
+          endDate: '2019-01-03T19:00:00.000Z',
+          customerId: `{${customerId}}`,
+        },
+      },
+      {
+        id: `${userName}TransferHistoryGet`,
+        url: `/banking/bhobssa/www/api/us-banking/transfer/agent/history`,
+        method: 'GET',
+        body: undefined,
+        headers: {},
+        query: {
+          start: '2017-07-10',
+          end: '2020-07-10',
+          customerId: `{${customerId}}`,
+        },
+      },
+    ]
+      .forEach(flow => userFlows.push(flow as any));
+
+  });
 
 export const options: ScrapOptions = {
-  domain: 'https://www.qa4.bmogc.net/banking/bhobssa/www',
+  domain: 'https://www.qa4.bmogc.net',
   headers: {
     'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
     'iv-groups': 'BHOB Admin Tool - CSR L2',
@@ -15,65 +176,13 @@ export const options: ScrapOptions = {
   },
   flows: [
     {
-      id: 'uiConfig',
-      url: '/api/us-banking/admin/ui-config',
+      id: `uiConfig`,
+      url: `/banking/bhobssa/www/api/us-banking/admin/ui-config`,
       method: 'GET',
       body: undefined,
       headers: {},
+      query: undefined,
     },
-    {
-      id: 'situser002',
-      url: '/api/us-banking/admin/customers',
-      method: 'POST',
-      body: {
-        searchQuery: 'situser002',
-      },
-      headers: {},
-    },
-    {
-      id: 'eligibility',
-      url: '/api/us-banking/enrollment/agent/assisted-channel-eligibility?customerId={situser002.data[0].customer.cisNumber}',
-      method: 'POST',
-      body: {},
-      headers: {},
-    },
-    {
-      id: 'accessControlls',
-      url: '/api/us-banking/admin/agents-access-controls?customerId={situser002.data[0].customer.cisNumber}',
-      method: 'GET',
-      body: undefined,
-      headers: {},
-    },
-    {
-      id: 'contactPreferences',
-      url: '/api/us-banking/notification/agent/contact-preferences/{situser002.data[0].customer.cisNumber}?includePush=true&bookOfRecord=true',
-      method: 'GET',
-      body: undefined,
-      headers: {},
-    },
-    {
-      id: 'alertSubscriptionsGet',
-      url: '/api/us-banking/notification/agent/alert-subscriptions/{situser002.data[0].customer.cisNumber}',
-      method: 'GET',
-      body: undefined,
-      headers: {},
-    },
-    {
-      id: 'alertSubscriptionsPut',
-      url: '/api/us-banking/notification/agent/alert-subscriptions/{situser002.data[0].customer.cisNumber}',
-      method: 'PUT',
-      body: [
-        {
-          "props": '{alertSubscriptionsGet.data[0].props}',
-          "subscriptionId": "{alertSubscriptionsGet.data[0].subscriptionId}",
-          "alertTypeId": "{alertSubscriptionsGet.data[0].alertTypeId}",
-          "communicationProfileId": "{alertSubscriptionsGet.data[0].communicationProfileId}",
-          "deliveryTarget": "{alertSubscriptionsGet.data[0].deliveryTarget}",
-          "changeToken": "828fe939-779c-4643-8bd8-5c7202aceb71",
-          "subscriptionSearchKey": "{alertSubscriptionsGet.data[0].subscriptionSearchKey}"
-        }
-      ],
-      headers: {},
-    },
+    ...userFlows,
   ],
 };

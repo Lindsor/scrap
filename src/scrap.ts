@@ -1,39 +1,46 @@
 import fetch, { Response } from 'node-fetch';
 import { get } from 'lodash';
-import { ScrapOptions, ScrapFlow, ScrapHeaders } from "./options";
+import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
+import { URL } from 'url';
+import fs from 'fs-extra';
 
 const PARAM_REGEX = /{(.+?)}/g;
 
 const options: ScrapOptions = require('./options-config').options;
 
-const assertValidOptions = (options: ScrapOptions) => !!options;
+const assertValidOptions = (options: ScrapOptions) => {
 
-const parseUrl = (url: string, options: ScrapOptions) => {
+  if (!options) {
+    throw new Error('Options must be declared');
+  }
 
-  let requestUrl = `${options.domain || ''}${url}`;
+  const domainUrl = new URL(options.domain || '');
+  if (domainUrl.pathname !== '/') {
+    throw new Error(`Pleade do not at a pathName to the 'options.domain'. ${options.domain}`);
+  }
 
-  requestUrl = requestUrl.replace(PARAM_REGEX, (match: string, param: string) => {
-    const paramParts = param.split('.');
-    const callId = paramParts[0];
-    const bodyPath = paramParts.slice(1).join('.');
+  if (!options.flows || !options.flows.length) {
+    throw new Error('options.flows must be declared');
+  }
 
-    const pathString = `${callId}.responseBody.${bodyPath}`;
+  const ids: string[] = [];
 
-    return `${get(calls, pathString)}`;
-  });
+  options.flows
+    .forEach((flow: ScrapFlow) => {
 
-  return requestUrl;
+      if (flow.url.includes('?')) {
+        throw new Error(`Url cannot have query parameters in the url. Please set through the "query" property.\n${flow.url}`);
+      }
+
+      if (ids.includes(flow.id)) {
+        throw new Error(`There cannot be duplicate id properties. Please rename ${flow.id}`);
+      }
+    });
 };
-const parseBody = (body: any, options: ScrapOptions): string => {
 
-  if (!body) return body;
+const replaceParams = (regex: RegExp, string: string): string => {
 
-  // TODO: Move the param regex and replace logic to seperate function and join with the `parseUrl` function
-  const paramRegex = /"?{(.+?)}"?/g;
-  // Also move to using a traversal strategy instead of string replace
-  let bodyString = JSON.stringify(body, undefined, 2);
-
-  bodyString = bodyString.replace(paramRegex, (match: string, param: string) => {
+  return string.replace(regex, (match: string, param: string) => {
     const paramParts = param.split('.');
     const callId = paramParts[0];
     const bodyPath = paramParts.slice(1).join('.');
@@ -47,12 +54,47 @@ const parseBody = (body: any, options: ScrapOptions): string => {
 
     return JSON.stringify(pathValue, undefined, 2);
   });
+};
+
+const parseUrl = (url: string, query: any, options: ScrapOptions) => {
+
+  let requestUrl = `${options.domain || ''}${url}`;
+
+  requestUrl = replaceParams(PARAM_REGEX, requestUrl);
+
+  if (!query) {
+    return requestUrl;
+  }
+
+  let queryString: string = Object.entries(query)
+    .map(([key, value]) => {
+
+      return `${key}=${value}`;
+    })
+    .join('&');
+  
+  const queryParamRegex = /"?{(.+?)}"?/g;
+  
+  queryString = replaceParams(queryParamRegex, queryString);
+
+  return `${requestUrl}?${queryString}`;
+};
+const parseBody = (body: any, options: ScrapOptions): string => {
+
+  if (!body) return body;
+
+  // TODO: Move the param regex and replace logic to seperate function and join with the `parseUrl` function
+  const paramRegex = /"?{(.+?)}"?/g;
+  // Also move to using a traversal strategy instead of string replace
+  let bodyString = JSON.stringify(body, undefined, 2);
+
+  bodyString = replaceParams(paramRegex, bodyString);
 
   // console.log(bodyString);
 
   return bodyString;
 };
-const parseHeaders = (headers: ScrapHeaders, options: ScrapOptions) => ({ ...options.headers, ...headers });
+const parseHeaders = (headers: ScrapHeaders | undefined, options: ScrapOptions) => ({ ...options.headers, ...headers });
 
 // Ensure options are valid.
 assertValidOptions(options);
@@ -61,6 +103,7 @@ console.clear();
 
 const calls: {
   [callId: string]: {
+    flow: ScrapFlow;
     response?: Response,
     // requestBody?: any,
     responseBody?: any,
@@ -71,13 +114,15 @@ const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, 
 
   const id = flow.id;
 
-  calls[id] = {};
+  calls[id] = {
+    flow,
+  };
 
   return previousCall
     .then(() => {
 
       const method = flow.method;
-      const url = parseUrl(flow.url, options);
+      const url = parseUrl(flow.url, flow.query, options);
       const body: string = parseBody(flow.body, options);
       const headers: any = parseHeaders(flow.headers, options);
 
@@ -98,7 +143,12 @@ const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, 
             .then((responseBody: any) => {
 
               calls[id].responseBody = responseBody;
-              console.log(JSON.stringify(responseBody, undefined, 2));
+              // console.log(JSON.stringify(responseBody, undefined, 2));
+              // TODO: Delete this
+              if (!!responseBody.error) {
+                console.log('FAILED');
+                console.log(JSON.stringify(responseBody, undefined, 2));
+              }
               console.log('#################################################################################################################');
               console.log('#################################################################################################################');
               console.log('#################################################################################################################');
@@ -112,6 +162,7 @@ const fetchApi = (previousCall: PromiseLike<PromiseLike<Response> | undefined>, 
 options.flows
   .reduce(fetchApi, Promise.resolve(undefined) as any)
   .then(() => {
-    // console.log('DONE');
+    console.log('DONE');
     // console.log(calls);
+
   });

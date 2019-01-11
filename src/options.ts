@@ -10,8 +10,11 @@ export declare type ScrapFlow = {
   id: string;
   url: string;
   method: ScrapMethod;
-  body: any;
-  headers: ScrapHeaders;
+  query?: {
+    [key: string]: string;
+  };
+  body?: any;
+  headers?: ScrapHeaders;
 };
 
 export declare type ScrapOptions = {
