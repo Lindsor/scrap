@@ -5,7 +5,7 @@
   "main": "build/scrap.js",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "start": "clear && npm run build && NODE_TLS_REJECT_UNAUTHORIZED=0 node ./build/scrap.js"
+    "start": "clear && rm -rf build && npm run build && NODE_TLS_REJECT_UNAUTHORIZED=0 node ./build/scrap.js"
   },
   "author": "",
   "license": "MIT",

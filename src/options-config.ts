@@ -212,6 +212,13 @@ export const options: ScrapOptions = {
       query: {
         id: '{listings.responseBody.data[0].id}',
       },
+    },
+    infoTest: {
+      url: `/v1/cryptocurrency/info/{listings.responseBody.data[0].id}`,
+      method: 'GET',
+      body: undefined,
+      headers: undefined,
+      query: undefined,
     }
   },
 };

@@ -2,6 +2,8 @@ import fetch, { Response } from 'node-fetch';
 import { get } from 'lodash';
 import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
 import { URL } from 'url';
+import path from 'path';
+import fs from 'fs-extra';
 
 const PARAM_REGEX = /{(.+?)}/g;
 
@@ -76,6 +78,26 @@ const replaceParams = (regex: RegExp, string: string): string => {
   });
 };
 
+const parseQuery = (query: any, options: ScrapOptions) => {
+
+  if (!query) {
+    return '';
+  }
+
+  let queryString: string = Object.entries(query)
+    .map(([key, value]) => {
+
+      return `${key}=${value}`;
+    })
+    .join('&');
+
+  const queryParamRegex = /"?{(.+?)}"?/g;
+
+  queryString = replaceParams(queryParamRegex, queryString);
+
+  return `${queryString}`;
+};
+
 const parseUrl = (url: string, query: any, options: ScrapOptions) => {
 
   let requestUrl = `${options.domain || ''}${url}`;
@@ -86,18 +108,7 @@ const parseUrl = (url: string, query: any, options: ScrapOptions) => {
     return requestUrl;
   }
 
-  let queryString: string = Object.entries(query)
-    .map(([key, value]) => {
-
-      return `${key}=${value}`;
-    })
-    .join('&');
-  
-  const queryParamRegex = /"?{(.+?)}"?/g;
-  
-  queryString = replaceParams(queryParamRegex, queryString);
-
-  return `${requestUrl}?${queryString}`;
+  return `${requestUrl}?${query}`;
 };
 const parseBody = (body: any, options: ScrapOptions): string => {
 
@@ -121,13 +132,18 @@ assertValidOptions(options);
 
 console.clear();
 
+export type ScrapCallDada = {
+  flow: ScrapFlow;
+  url?: string;
+  query?: string;
+  requestBody?: any;
+  responseBody?: any;
+  requestHeaders?: ScrapHeaders;
+  responseHeaders?: ScrapHeaders;
+};
+
 const calls: {
-  [callId: string]: {
-    flow: ScrapFlow;
-    response?: Response,
-    // requestBody?: any,
-    responseBody?: any,
-  };
+  [callId: string]: ScrapCallDada;
 } = {};
 
 const fetchApi = (
@@ -143,14 +159,18 @@ const fetchApi = (
     .then(() => {
 
       const method = flow.method;
-      const url = parseUrl(flow.url, flow.query, options);
+      const query = parseQuery(flow.query, options);
+      const url = parseUrl(flow.url, query, options);
       const body: string = parseBody(flow.body, options);
       const headers: any = parseHeaders(flow.headers, options);
 
       console.log(`${method}: ${url}`);
       // TODO: Handle `[]` parameters by going through all sub urls.
 
-      // calls[id].requestBody = body;
+      calls[id].url = url;
+      calls[id].query = query;
+      calls[id].requestBody = body;
+      calls[id].requestHeaders = headers;
 
       return fetch(url, {
         method,
@@ -158,7 +178,14 @@ const fetchApi = (
         headers,
       })
         .then((response: Response) => {
-          calls[id].response = response;
+
+          calls[id].responseHeaders = Object.entries(response.headers.raw())
+            .reduce((headers: ScrapHeaders, [headerName, [headerValue]]: [string, string[]]) => {
+              
+              headers[headerName] = headerValue;
+
+              return headers;
+            }, {});
 
           return response.json()
             .then((responseBody: any) => {
@@ -182,8 +209,47 @@ const fetchApi = (
 
 Object.entries(options.flows)
   .reduce(fetchApi, Promise.resolve(undefined) as any)
-  .then(() => {
-    console.log('DONE');
-    // console.log(calls);
+  .then(() => Promise.all([
+    ...Object.entries(calls)
+      .map(([callId, callData]: [string, ScrapCallDada]) => {
+        const mockPath = path.resolve(__dirname, 'mocks');
+        const url: URL = new URL(callData.url as string);
+        const method = callData.flow.method;
+        const dataRootPath: string = `${mockPath}${url.pathname}/_${method.toUpperCase()}`;
 
-  });
+        const writes: Promise<void>[] = [];
+
+        if (callData.query) {
+          const queryPath = path.resolve(dataRootPath, 'query.json');
+          const queryString = JSON.stringify(callData.query, undefined, 2);
+          writes.push(fs.outputFile(queryPath, queryString));
+        }
+
+        if (callData.responseBody) {
+          const responseBodyPath = path.resolve(dataRootPath, 'response.json');
+          const responseBody = JSON.stringify(callData.responseBody, undefined, 2);
+          writes.push(fs.outputFile(responseBodyPath, responseBody));
+        }
+
+        if (callData.requestBody) {
+          const requestBodyPath = path.resolve(dataRootPath, 'request.json');
+          const requestBody = JSON.stringify(callData.requestBody, undefined, 2);
+          writes.push(fs.outputFile(requestBodyPath, requestBody));
+        }
+
+        if (callData.responseHeaders) {
+          const responseHeadersPath = path.resolve(dataRootPath, 'response-headers.json');
+          const responseHeaders = JSON.stringify(callData.responseHeaders, undefined, 2);
+          fs.outputFile(responseHeadersPath, responseHeaders);
+        }
+
+        if (callData.requestHeaders) {
+          const requestHeadersPath = path.resolve(dataRootPath, 'request-headers.json');
+          const requestHeaders = JSON.stringify(callData.requestHeaders, undefined, 2);
+          fs.outputFile(requestHeadersPath, requestHeaders);
+        }
+
+        return Promise.all(writes);
+      })
+  ]))
+  .then(() => console.log('DONE'));
