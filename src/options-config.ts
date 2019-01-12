@@ -206,8 +206,17 @@ export const options: ScrapOptions = {
     },
     info: {
       url: `/v1/cryptocurrency/info`,
-      method: 'GET',
-      body: undefined,
+      method: 'POST',
+      body: {
+        id: '{listings.responseBody.data[0].id}',
+        test: 'test',
+        deeper: {
+          muchDeeper: '{listings.responseBody.data[0].id}',
+          muchMuchDeeper: {
+            woot: '{listings.responseBody.data[0].id}',
+          }
+        }
+      },
       headers: undefined,
       query: {
         id: '{listings.responseBody.data[0].id}',

@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch';
-import { get } from 'lodash';
+import { get, isObjectLike, mapValues, isString } from 'lodash';
 import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
 import { URL } from 'url';
 import path from 'path';
@@ -57,9 +57,13 @@ const assertValidOptions = (options: ScrapOptions) => {
     });
 };
 
-const replaceParams = (regex: RegExp, string: string): string => {
+const replaceParams = (regex: RegExp, string: string): any => {
 
-  return string.replace(regex, (match: string, param: string) => {
+  const stringParts = string.split('::');
+  const stringToReplace = stringParts[0];
+  const converter = (stringParts[1] || 'string').toLowerCase();
+
+  const convertedString = stringToReplace.replace(regex, (match: string, param: string) => {
     const paramParts = param.split('.');
     const callId = paramParts[0];
     const flowPath = paramParts[1];
@@ -70,12 +74,38 @@ const replaceParams = (regex: RegExp, string: string): string => {
     const pathString = `${callId}.${flowPath}.${bodyPath}`;
     const pathValue = get(calls, pathString);
 
-    if (typeof pathValue === 'string') {
+    if (isString(pathValue)) {
       return `"${pathValue}"`;
     }
 
     return JSON.stringify(pathValue, undefined, 2);
   });
+
+  return convertString(convertedString, converter as any);
+};
+
+const convertString = (
+  value: string,
+  converter: 'string' | 'boolean' | 'number' | 'object'
+) => {
+
+  if (converter === 'string') {
+    return value;
+  }
+
+  if (converter === 'boolean') {
+    return Boolean(value).valueOf();
+  }
+
+  if (converter === 'number') {
+    return Number(value).valueOf();
+  }
+
+  if (converter === 'object') {
+    return JSON.parse(value);
+  }
+
+  return `${value}`;
 };
 
 const parseQuery = (query: any, options: ScrapOptions) => {
@@ -110,20 +140,31 @@ const parseUrl = (url: string, query: any, options: ScrapOptions) => {
 
   return `${requestUrl}?${query}`;
 };
-const parseBody = (body: any, options: ScrapOptions): string => {
+const deepReplace = (obj: any, paramRegex: RegExp): any => {
+
+  if (isString(obj)) {
+    return replaceParams(paramRegex, obj);
+  }
+
+  if (!isObjectLike(obj)) {
+    return obj;
+  }
+
+  return mapValues(obj, value => deepReplace(value, paramRegex));
+};
+const parseBody = (body: any, options: ScrapOptions): any => {
 
   if (!body) return body;
 
   // TODO: Move the param regex and replace logic to seperate function and join with the `parseUrl` function
   const paramRegex = /"?{(.+?)}"?/g;
-  // Also move to using a traversal strategy instead of string replace
-  let bodyString = JSON.stringify(body, undefined, 2);
 
-  bodyString = replaceParams(paramRegex, bodyString);
+  console.log(JSON.stringify(body, undefined, 2));
+  console.log(JSON.stringify(deepReplace(body, paramRegex), undefined, 2));
 
-  // console.log(bodyString);
+  // process.exit(0);
 
-  return bodyString;
+  return deepReplace(body, paramRegex);
 };
 const parseHeaders = (headers: ScrapHeaders | undefined, options: ScrapOptions) => ({ ...options.headers, ...headers });
 
@@ -210,8 +251,8 @@ const fetchApi = (
 Object.entries(options.flows)
   .reduce(fetchApi, Promise.resolve(undefined) as any)
   .then(() => Promise.all([
-    ...Object.entries(calls)
-      .map(([callId, callData]: [string, ScrapCallDada]) => {
+    ...Object.values(calls)
+      .map((callData: ScrapCallDada) => {
         const mockPath = path.resolve(__dirname, 'mocks');
         const url: URL = new URL(callData.url as string);
         const method = callData.flow.method;
