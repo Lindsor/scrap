@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch';
-import { get, isObjectLike, mapValues, isString } from 'lodash';
+import { get, isObjectLike, mapValues, isString, isArray } from 'lodash';
 import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
 import { URL } from 'url';
 import path from 'path';
@@ -148,6 +148,10 @@ const deepReplace = (obj: any, paramRegex: RegExp): any => {
 
   if (!isObjectLike(obj)) {
     return obj;
+  }
+
+  if (isArray(obj)) {
+    return obj.map(arrValue => deepReplace(arrValue, paramRegex));
   }
 
   return mapValues(obj, value => deepReplace(value, paramRegex));

@@ -212,9 +212,11 @@ export const options: ScrapOptions = {
         test: 'test',
         deeper: {
           muchDeeper: '{listings.responseBody.data[0].id}',
-          muchMuchDeeper: {
-            woot: '{listings.responseBody.data[0].id}',
-          }
+          muchMuchDeeper: [
+            '{listings.responseBody.data[0].id}',
+            'test',
+            '{listings.responseBody.data[0].id}',
+          ]
         }
       },
       headers: undefined,
