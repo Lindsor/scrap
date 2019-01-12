@@ -5,15 +5,17 @@ import { URL } from 'url';
 import path from 'path';
 import fs from 'fs-extra';
 
-const PARAM_REGEX = /{(.+?)}/g;
+const PARAM_REGEX = /"?{(.+?)}"?/g
 
 const options: ScrapOptions = require('./options-config').options;
 
 const assertValidFlowPath = (flowPath: string) => {
 
   const validFlowPaths = [
-    'responseBody',
     'requestBody',
+    'responseBody',
+    'requestHeaders',
+    'responseHeaders',
   ];
 
   if (
@@ -75,7 +77,7 @@ const replaceParams = (regex: RegExp, string: string): any => {
     const pathValue = get(calls, pathString);
 
     if (isString(pathValue)) {
-      return `"${pathValue}"`;
+      return `${pathValue}`;
     }
 
     return JSON.stringify(pathValue, undefined, 2);
@@ -90,6 +92,7 @@ const convertString = (
 ) => {
 
   if (converter === 'string') {
+    console.log('VALUE:', value)
     return value;
   }
 
@@ -121,9 +124,7 @@ const parseQuery = (query: any, options: ScrapOptions) => {
     })
     .join('&');
 
-  const queryParamRegex = /"?{(.+?)}"?/g;
-
-  queryString = replaceParams(queryParamRegex, queryString);
+  queryString = replaceParams(PARAM_REGEX, queryString);
 
   return `${queryString}`;
 };
@@ -160,15 +161,10 @@ const parseBody = (body: any, options: ScrapOptions): any => {
 
   if (!body) return body;
 
-  // TODO: Move the param regex and replace logic to seperate function and join with the `parseUrl` function
-  const paramRegex = /"?{(.+?)}"?/g;
-
   console.log(JSON.stringify(body, undefined, 2));
-  console.log(JSON.stringify(deepReplace(body, paramRegex), undefined, 2));
+  console.log(JSON.stringify(deepReplace(body, PARAM_REGEX), undefined, 2));
 
-  // process.exit(0);
-
-  return deepReplace(body, paramRegex);
+  return deepReplace(body, PARAM_REGEX);
 };
 const parseHeaders = (headers: ScrapHeaders | undefined, options: ScrapOptions) => ({ ...options.headers, ...headers });
 
@@ -181,6 +177,7 @@ export type ScrapCallDada = {
   flow: ScrapFlow;
   url?: string;
   query?: string;
+  savePath?: string;
   requestBody?: any;
   responseBody?: any;
   requestHeaders?: ScrapHeaders;
@@ -208,6 +205,7 @@ const fetchApi = (
       const url = parseUrl(flow.url, query, options);
       const body: string = parseBody(flow.body, options);
       const headers: any = parseHeaders(flow.headers, options);
+      const savePath = parseUrl(flow.savePath || flow.url, undefined, options);
 
       console.log(`${method}: ${url}`);
       // TODO: Handle `[]` parameters by going through all sub urls.
@@ -215,6 +213,7 @@ const fetchApi = (
       calls[id].url = url;
       calls[id].query = query;
       calls[id].requestBody = body;
+      calls[id].savePath = savePath;
       calls[id].requestHeaders = headers;
 
       return fetch(url, {
@@ -258,9 +257,9 @@ Object.entries(options.flows)
     ...Object.values(calls)
       .map((callData: ScrapCallDada) => {
         const mockPath = path.resolve(__dirname, 'mocks');
-        const url: URL = new URL(callData.url as string);
+        const savePathUrl: URL = new URL((callData.savePath as string));
         const method = callData.flow.method;
-        const dataRootPath: string = `${mockPath}${url.pathname}/_${method.toUpperCase()}`;
+        const dataRootPath: string = `${mockPath}${savePathUrl.pathname}/_${method.toUpperCase()}`;
 
         const writes: Promise<void>[] = [];
 

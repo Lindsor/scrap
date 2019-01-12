@@ -213,7 +213,7 @@ export const options: ScrapOptions = {
         deeper: {
           muchDeeper: '{listings.responseBody.data[0].id}',
           muchMuchDeeper: [
-            '{listings.responseBody.data[0].id}',
+            '{listings.responseBody.data[0].id}::number',
             'test',
             '{listings.responseBody.data[0].id}',
           ]
@@ -226,6 +226,7 @@ export const options: ScrapOptions = {
     },
     infoTest: {
       url: `/v1/cryptocurrency/info/{listings.responseBody.data[0].id}`,
+      savePath: `/v1/cryptocurrency/info/{listings.responseBody.data[0].name}`,
       method: 'GET',
       body: undefined,
       headers: undefined,

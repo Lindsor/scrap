@@ -8,6 +8,7 @@ export declare type ScrapHeaders = {
 
 export declare type ScrapFlow = {
   url: string;
+  savePath?: string;
   method: ScrapMethod;
   query?: {
     [key: string]: string;
