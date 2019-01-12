@@ -2,11 +2,25 @@ import fetch, { Response } from 'node-fetch';
 import { get } from 'lodash';
 import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
 import { URL } from 'url';
-import fs from 'fs-extra';
 
 const PARAM_REGEX = /{(.+?)}/g;
 
 const options: ScrapOptions = require('./options-config').options;
+
+const assertValidFlowPath = (flowPath: string) => {
+
+  const validFlowPaths = [
+    'responseBody',
+    'requestBody',
+  ];
+
+  if (
+    !flowPath ||
+    !validFlowPaths.includes(flowPath)
+  ) {
+    throw new Error(`A valid flowPath must be passed in, one of: '${validFlowPaths.join(', ')}'`);
+  }
+};
 
 const assertValidOptions = (options: ScrapOptions) => {
 
@@ -46,9 +60,12 @@ const replaceParams = (regex: RegExp, string: string): string => {
   return string.replace(regex, (match: string, param: string) => {
     const paramParts = param.split('.');
     const callId = paramParts[0];
-    const bodyPath = paramParts.slice(1).join('.');
+    const flowPath = paramParts[1];
+    const bodyPath = paramParts.slice(2).join('.');
 
-    const pathString = `${callId}.responseBody.${bodyPath}`;
+    assertValidFlowPath(flowPath);
+
+    const pathString = `${callId}.${flowPath}.${bodyPath}`;
     const pathValue = get(calls, pathString);
 
     if (typeof pathValue === 'string') {

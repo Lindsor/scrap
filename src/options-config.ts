@@ -210,7 +210,7 @@ export const options: ScrapOptions = {
       body: undefined,
       headers: undefined,
       query: {
-        id: '{listings.data[0].id}',
+        id: '{listings.responseBody.data[0].id}',
       },
     }
   },
