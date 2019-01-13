@@ -1,16 +1,15 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import { URL } from 'url';
 import { ScrapCallDada, ScrapCalls } from './data';
 
 export const saveAll = (calls: ScrapCalls) => Promise.all([
   ...Object.values(calls)
     .map((callData: ScrapCallDada) => {
       const mockPath = path.resolve(__dirname, 'mocks');
-      const savePathUrl: URL = new URL((callData.savePath as string));
+      // const savePathUrl: URL = new URL((callData.savePath as string));
       const method = callData.flow.method;
-      const dataRootPath: string = `${mockPath}${savePathUrl.pathname}/_${method.toUpperCase()}`;
+      const dataRootPath: string = `${mockPath}${callData.savePath}/_${method.toUpperCase()}`;
 
       const writes: Promise<void>[] = [];
 

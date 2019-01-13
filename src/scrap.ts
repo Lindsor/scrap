@@ -1,12 +1,13 @@
-import { ScrapOptions, ScrapFlow, ScrapHeaders } from './options';
+import { ScrapOptions, ScrapFlow, ScrapHeaders, ScrapMethod } from './options';
 import fetch, { Response, Headers } from 'node-fetch';
+import { Replacer } from './replacer';
 import { ScrapCalls } from './data';
-import { parseHeaders } from './parse/headers';
-import { parseQuery } from './parse/query';
-import { parseBody } from './parse/body';
-import { parseUrl } from './parse/url';
+import qs from 'query-string';
+import { URL } from 'url';
 
 export class Scrap {
+
+  private replacer = new Replacer();
 
   constructor(
     private options: ScrapOptions,
@@ -60,6 +61,34 @@ export class Scrap {
       });
   }
 
+  private buildRequestUrl(
+    urlOrPath: string,
+    query: any,
+    domain: string,
+    calls: ScrapCalls,
+  ): string {
+
+    let builtUrl: string = this.replacer.replace(urlOrPath, calls);
+    const builtQuery: any = this.replacer.replace(query, calls);
+    const queryString: string = qs.stringify(builtQuery);
+
+    if (queryString) {
+      builtUrl = `${builtUrl}?${queryString}`;
+    }
+
+    let url: URL;
+
+    try {
+      url = new URL(builtUrl);
+    } catch (e) {
+      // Delete leading slash to normalize url.
+      const pathName: string = builtUrl.replace(/^\//, '');
+      url = new URL(`${domain}/${pathName}`);
+    }
+
+    return url.href;
+  }
+
   private scrapReduce(
     previousCall: PromiseLike<PromiseLike<Response> | undefined>,
     [id, flow]: [string, ScrapFlow],
@@ -71,14 +100,25 @@ export class Scrap {
     return previousCall
       .then(() => {
 
-        const method = flow.method;
-        const query = parseQuery(flow.query, this.options, this.calls);
-        const url = parseUrl(flow.url, query, this.options, this.calls);
-        const body: string = parseBody(flow.body, this.options, this.calls);
-        const headers: any = parseHeaders(flow.headers, this.options);
-        const savePath = parseUrl(flow.savePath || flow.url, undefined, this.options, this.calls);
+        const method: ScrapMethod = flow.method;
+        const query: any = this.replacer.replace(flow.query, this.calls);
+        const body: any = this.replacer.replace(flow.body, this.calls);
+        const savePath: string = this.replacer.replace(flow.savePath || flow.url, this.calls);
+        const headers: any = this.replacer.replace(
+          {
+            ...this.options.headers,
+            ...flow.headers,
+          },
+          this.calls,
+        );
+        const url: string = this.buildRequestUrl(
+          flow.url,
+          flow.query,
+          this.options.domain as string,
+          this.calls,
+        );
 
-        console.log(`${method}: ${url}`);
+        console.log(`${method}: ${flow.url}`);
         // TODO: Handle `[]` parameters by going through all sub urls.
 
         this.calls[id].url = url;

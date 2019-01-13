@@ -229,7 +229,10 @@ export const options: ScrapOptions = {
       savePath: `/v1/cryptocurrency/info/{listings.responseBody.data[0].name}`,
       method: 'GET',
       body: undefined,
-      headers: undefined,
+      headers: {
+        headerTest: 'test1',
+        replaceTest: 'Crypto-Name: {listings.responseBody.data[0].name}',
+      },
       query: undefined,
     }
   },
