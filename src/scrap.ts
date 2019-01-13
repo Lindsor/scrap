@@ -1,64 +1,42 @@
-import { ScrapOptions, ScrapFlow, ScrapHeaders, ScrapMethod } from './options';
-import fetch, { Response, Headers } from 'node-fetch';
+import { ScrapOptions, ScrapFlow, ScrapMethod, ScrapCalls } from './options';
+import { Fetcher } from './fetcher';
+import { Response } from 'node-fetch';
 import { Replacer } from './replacer';
-import { ScrapCalls } from './data';
+import { Saver } from './saver';
 import qs from 'query-string';
 import { URL } from 'url';
 
 export class Scrap {
 
-  private replacer = new Replacer();
+  private replacer: Replacer = new Replacer();
+  private fetcher: Fetcher = new Fetcher();
+  private saver: Saver = new Saver();
 
   constructor(
     private options: ScrapOptions,
     private calls: ScrapCalls = {},
   ) {}
 
+  public scrapAndSave(): Promise<ScrapCalls> {
+    return this.scrap()
+      .then(() => this.save());
+  }
+
   public scrap(): Promise<ScrapCalls> {
-    return (Object.entries(this.options.flows) as any)
-      .reduce(this.scrapReduce.bind(this), Promise.resolve(undefined) as any)
+    return Object.entries(this.options.flows)
+      .reduce(
+        (
+          prevCalls: Promise<Response>,
+          [id, flow]: [string, ScrapFlow],
+        ) => this.scrapReduce(id, flow, prevCalls),
+        Promise.resolve(undefined as any),
+      )
       .then(() => this.calls);
   }
 
-  public fetch(
-    id: string,
-    url: string,
-    method: string,
-    body: string,
-    headers: Headers,
-  ) {
-    return fetch(url, {
-      method,
-      body,
-      headers,
-    })
-      .then((response: Response) => {
-
-        this.calls[id].responseHeaders = Object.entries(response.headers.raw())
-          .reduce((headers: ScrapHeaders, [headerName, [headerValue]]: [string, string[]]) => {
-
-            headers[headerName] = headerValue;
-
-            return headers;
-          }, {});
-
-        return response.json()
-          .then((responseBody: any) => {
-
-            this.calls[id].responseBody = responseBody;
-            // console.log(JSON.stringify(responseBody, undefined, 2));
-            // TODO: Delete this
-            if (!!responseBody.error) {
-              console.log('FAILED');
-              console.log(JSON.stringify(responseBody, undefined, 2));
-            }
-            console.log('#################################################################################################################');
-            console.log('#################################################################################################################');
-            console.log('#################################################################################################################');
-
-            return response;
-          });
-      });
+  public save(): Promise<ScrapCalls> {
+    return this.saver.saveAll(this.calls)
+      .then(() => this.calls);
   }
 
   private buildRequestUrl(
@@ -90,9 +68,10 @@ export class Scrap {
   }
 
   private scrapReduce(
-    previousCall: PromiseLike<PromiseLike<Response> | undefined>,
-    [id, flow]: [string, ScrapFlow],
-  ) {
+    id: string,
+    flow: ScrapFlow,
+    previousCall: Promise<Response>,
+  ): Promise<Response> {
     this.calls[id] = {
       flow,
     };
@@ -127,12 +106,13 @@ export class Scrap {
         this.calls[id].savePath = savePath;
         this.calls[id].requestHeaders = headers;
 
-        return this.fetch(
+        return this.fetcher.fetch(
           id,
           url,
           method,
           body,
           headers,
+          this.calls,
         );
       });
   }

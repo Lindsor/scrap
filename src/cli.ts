@@ -1,5 +1,4 @@
 import { ScrapOptions, assertValidOptions } from './options';
-import { saveAll } from './save';
 import { Scrap } from './scrap';
 
 const options: ScrapOptions = require('./options-config').options;
@@ -11,6 +10,5 @@ console.clear();
 
 const scrapper: Scrap = new Scrap(options);
 
-scrapper.scrap()
-  .then(saveAll)
+scrapper.scrapAndSave()
   .then(() => console.log('DONE'));

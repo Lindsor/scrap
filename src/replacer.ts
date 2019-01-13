@@ -1,6 +1,5 @@
 import { isString, isObjectLike, mapValues, get } from 'lodash';
-import { assertValidFlowPath } from './options';
-import { ScrapCalls } from './data';
+import { assertValidFlowPath, ScrapCalls } from './options';
 
 declare type Converter = 'string' | 'boolean' | 'number' | 'object';
 
