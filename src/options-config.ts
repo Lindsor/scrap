@@ -1,12 +1,34 @@
 import { ScrapOptions, ScrapFlow } from './options';
 
-// const users = [
-//   'situser002',
-//   // 'marceloluz',
-//   // 'situser005',
-// ];
+const users = [
+  'situser002',
+  // 'marceloluz',
+  // 'situser005',
+];
 
-// const userFlows: ScrapFlow[] = [];
+// export const options: ScrapOptions = {
+//   domain: 'https://www.qa4.bmogc.net',
+//   headers: {
+//     'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
+//     'iv-groups': 'BHOB Admin Tool - CSR L2',
+//     'iv-user': 'BHOBTest03@officeqa.adrootqa.bmogc.net',
+//     'Host': 'www.qa4.bmogc.net',
+//     'Referer': 'https://www.qa4.bmogc.net/banking/bhobssa/www/login',
+//     'Authorization': 'Basic QkhPQlRlc3QwM0BvZmZpY2VxYS5hZHJvb3RxYS5ibW9nYy5uZXQ6bmV3RmFsbDIwMTc=',
+//     'Cookie': 'XSRF-TOKEN=xsrf',
+//     'X-Xsrf-Token': 'xsrf',
+//     'Content-Type': 'application/json'
+//   },
+//   flows: {
+//     uiConfig: {
+//       url: `/banking/bhobssa/www/api/us-banking/admin/ui-config`,
+//       method: 'GET',
+//       body: undefined,
+//       headers: {},
+//       query: undefined,
+//     },
+//   },
+// };
 
 // users
 //   .forEach((userName: string) => {
@@ -157,35 +179,11 @@ import { ScrapOptions, ScrapFlow } from './options';
 //         },
 //       },
 //     ]
-//       .forEach(flow => userFlows.push(flow as any));
+//       .forEach(flow => {
+//         options.flows[flow.id] = { ...flow } as any;
+//       });
 
 //   });
-
-// export const options: ScrapOptions = {
-//   domain: 'https://www.qa4.bmogc.net',
-//   headers: {
-//     'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
-//     'iv-groups': 'BHOB Admin Tool - CSR L2',
-//     'iv-user': 'BHOBTest03@officeqa.adrootqa.bmogc.net',
-//     'Host': 'www.qa4.bmogc.net',
-//     'Referer': 'https://www.qa4.bmogc.net/banking/bhobssa/www/login',
-//     'Authorization': 'Basic QkhPQlRlc3QwM0BvZmZpY2VxYS5hZHJvb3RxYS5ibW9nYy5uZXQ6bmV3RmFsbDIwMTc=',
-//     'Cookie': 'XSRF-TOKEN=xsrf',
-//     'X-Xsrf-Token': 'xsrf',
-//     'Content-Type': 'application/json'
-//   },
-//   flows: [
-//     {
-//       id: `uiConfig`,
-//       url: `/banking/bhobssa/www/api/us-banking/admin/ui-config`,
-//       method: 'GET',
-//       body: undefined,
-//       headers: {},
-//       query: undefined,
-//     },
-//     ...userFlows,
-//   ],
-// };
 
 export const options: ScrapOptions = {
   domain: 'https://sandbox-api.coinmarketcap.com',
