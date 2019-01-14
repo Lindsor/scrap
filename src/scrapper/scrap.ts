@@ -97,7 +97,6 @@ export class Scrap {
           this.calls,
         );
 
-        console.log(`${method}: ${flow.url}`);
         // TODO: Handle `[]` parameters by going through all sub urls.
 
         this.calls[id].url = url;

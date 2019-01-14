@@ -5,10 +5,11 @@ import path from 'path';
 
 export class Saver {
   public saveAll(calls: ScrapCalls) {
+    // TODO: Validate all savePath's are unique
     return Promise.all([
       ...Object.values(calls)
         .map((callData: ScrapCallDada) => {
-          const mockPath = path.resolve(__dirname, 'mocks');
+          const mockPath = path.resolve(__dirname, '..', 'mocks');
           // const savePathUrl: URL = new URL((callData.savePath as string));
           const method = callData.flow.method;
           const dataRootPath: string = `${mockPath}${callData.savePath}/_${method.toUpperCase()}`;

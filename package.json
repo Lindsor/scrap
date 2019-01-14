@@ -5,7 +5,8 @@
   "main": "build/scrap.js",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "start": "clear && rm -rf build && npm run build && NODE_TLS_REJECT_UNAUTHORIZED=0 node ./build/cli.js"
+    "build:scrapper": "clear && rm -rf build/scrapper && npm run build && NODE_TLS_REJECT_UNAUTHORIZED=0 node ./build/scrapper/cli.js",
+    "build:server": "clear && npm run build && node ./build/server"
   },
   "author": "",
   "license": "MIT",

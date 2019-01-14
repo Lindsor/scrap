@@ -11,9 +11,6 @@ export class Replacer {
 
     if (!body) return body;
 
-    console.log(JSON.stringify(body, undefined, 2));
-    console.log(JSON.stringify(this.deepReplace(body, calls), undefined, 2));
-
     return this.deepReplace(body, calls);
   }
 

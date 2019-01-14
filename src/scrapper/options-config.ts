@@ -1,15 +1,15 @@
 import { ScrapOptions, ScrapFlow } from './options';
 
-const users = [
-  'situser002',
-  // 'marceloluz',
-  // 'situser005',
-];
+// const users = [
+//   'situser002',
+//   'marceloluz',
+//   'situser005',
+// ];
 
 // export const options: ScrapOptions = {
 //   domain: 'https://www.qa4.bmogc.net',
 //   headers: {
-//     'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
+//     // 'X-CMC_PRO_API_KEY': 'f2e034d1-1259-4f71-8f32-623eeefeeb5d',
 //     'iv-groups': 'BHOB Admin Tool - CSR L2',
 //     'iv-user': 'BHOBTest03@officeqa.adrootqa.bmogc.net',
 //     'Host': 'www.qa4.bmogc.net',
@@ -33,7 +33,7 @@ const users = [
 // users
 //   .forEach((userName: string) => {
 
-//     const customerId = `${userName}.data[0].customer.cisNumber`;
+//     const customerId = `${userName}.responseBody.data[0].customer.cisNumber`;
 
 //     [
 //       {
@@ -53,7 +53,7 @@ const users = [
 //         body: {},
 //         headers: {},
 //         query: {
-//           customerId: `{${ customerId }}`,
+//           customerId: `{${customerId}}`,
 //         },
 //       },
 //       {
@@ -91,13 +91,13 @@ const users = [
 //         method: 'PUT',
 //         body: [
 //           {
-//             "props": `{${userName}AlertSubscriptionsGet.data[0].props}`,
-//             "subscriptionId": `{${userName}AlertSubscriptionsGet.data[0].subscriptionId}`,
-//             "alertTypeId": `{${userName}AlertSubscriptionsGet.data[0].alertTypeId}`,
-//             "communicationProfileId": `{${userName}AlertSubscriptionsGet.data[0].communicationProfileId}`,
-//             "deliveryTarget": `{${userName}AlertSubscriptionsGet.data[0].deliveryTarget}`,
+//             "props": `{${userName}AlertSubscriptionsGet.responseBody.data[0].props}`,
+//             "subscriptionId": `{${userName}AlertSubscriptionsGet.responseBody.data[0].subscriptionId}`,
+//             "alertTypeId": `{${userName}AlertSubscriptionsGet.responseBody.data[0].alertTypeId}`,
+//             "communicationProfileId": `{${userName}AlertSubscriptionsGet.responseBody.data[0].communicationProfileId}`,
+//             "deliveryTarget": `{${userName}AlertSubscriptionsGet.responseBody.data[0].deliveryTarget}`,
 //             "changeToken": "828fe939-779c-4643-8bd8-5c7202aceb71",
-//             "subscriptionSearchKey": `{${userName}AlertSubscriptionsGet.data[0].subscriptionSearchKey}`,
+//             "subscriptionSearchKey": `{${userName}AlertSubscriptionsGet.responseBody.data[0].subscriptionSearchKey}`,
 //           }
 //         ],
 //         headers: {},
@@ -113,7 +113,7 @@ const users = [
 //       },
 //       {
 //         id: `${userName}AccountDetailsGet`,
-//         url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/account/{${userName}AccountsGet.data[0].accounts[0].accountId}`,
+//         url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/account/{${userName}AccountsGet.responseBody.data[0].accounts[0].accountId}`,
 //         method: 'GET',
 //         body: undefined,
 //         headers: {},
@@ -137,7 +137,7 @@ const users = [
 //       },
 //       {
 //         id: `${userName}TransactionTypesGet`,
-//         url: `/banking/bhobssa/www/api/us-banking/transaction/agent/{${customerId}}/accounts/{${userName}AccountsGet.data[0].accounts[0].accountId}/transactions`,
+//         url: `/banking/bhobssa/www/api/us-banking/transaction/agent/{${customerId}}/accounts/{${userName}AccountsGet.responseBody.data[0].accounts[0].accountId}/transactions`,
 //         method: 'GET',
 //         body: undefined,
 //         headers: {},
@@ -148,7 +148,7 @@ const users = [
 //       },
 //       {
 //         id: `${userName}EntitlementsGet`,
-//         url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/accounts/{${userName}AccountsGet.data[0].accounts[0].accountId}/entitlement`,
+//         url: `/banking/bhobssa/www/api/us-banking/admin/customer/{${customerId}}/accounts/{${userName}AccountsGet.responseBody.data[0].accounts[0].accountId}/entitlement`,
 //         method: 'GET',
 //         body: undefined,
 //         headers: {},

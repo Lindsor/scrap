@@ -11,6 +11,13 @@ export class Fetcher {
     headers: any,
     calls: ScrapCalls,
   ): Promise<Response> {
+    // TODO: Handle non JSON responses
+    body = JSON.stringify(body);
+
+    const requestLogLine = `${method}: ${url}`;
+
+    console.log(requestLogLine);
+
     return fetch(url, {
       method,
       body,
@@ -33,7 +40,7 @@ export class Fetcher {
             // console.log(JSON.stringify(responseBody, undefined, 2));
             // TODO: Delete this
             if (!!responseBody.error) {
-              console.log('FAILED');
+              console.log(`FAILED - ${requestLogLine}`);
               console.log(JSON.stringify(responseBody, undefined, 2));
             }
             console.log('#################################################################################################################');
