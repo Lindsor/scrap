@@ -87,16 +87,7 @@ export class Replacer {
       });
 
     if (converter) {
-      try {
-        return JSON.parse(replaced);
-      } catch (e) {
-        console.log('');
-        console.log(replaced);
-        console.log('');
-        console.log(e);
-        // throw e;
-        process.exit(0);
-      }
+      return converter(replaced);
     }
 
     return replaced;
