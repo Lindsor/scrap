@@ -1,5 +1,8 @@
+import { Query } from './../options/options';
 import { RequestMethod, Headers, Response } from '../options/options';
 import fetch, { Response as FetchResponse, Headers as FetchHeaders } from 'node-fetch';
+import { URL } from 'url';
+import qs from 'query-string';
 
 export class Fetcher {
 
@@ -10,6 +13,12 @@ export class Fetcher {
 
         return headers;
       }, {});
+  }
+
+  convertQuery(urlString: string): Query {
+    const url: URL = new URL(urlString);
+
+    return qs.parse(url.search);
   }
 
   fetch(
@@ -30,6 +39,7 @@ export class Fetcher {
         .then((responseBody: any) => {
 
           const responseHeaders: Headers = this.convertHeaders(response.headers);
+          const query: Query = this.convertQuery(url);
           const status: number = response.status;
 
           console.info(`${method} (${status}) - ${url}`);
@@ -41,6 +51,7 @@ export class Fetcher {
             requestBody,
             status,
             method,
+            query,
             url,
           };
         }));

@@ -25,26 +25,28 @@ const scrapper: Scrapper = new Scrapper({
           query: {
             id: '{listings.responseBody.data[0].id}',
           },
-        },
-        infoPostTest: {
-          pathName: `/v1/cryptocurrency/info`,
-          method: 'POST',
-          body: {
-            id: '{listings.responseBody.data[0].id}',
-            test: 'test',
-            deeper: {
-              muchDeeper: '{listings.responseBody.data[0].id}',
-              muchMuchDeeper: [
-                '{listings.responseBody.data[0].id}',
-                'test',
-                '{listings.responseBody.data[0].id}',
-              ]
-            }
-          },
-          headers: undefined,
-          query: {
-            id: '{listings.responseBody.data[0].id}',
-          },
+          calls: {
+            infoPostTest: {
+              pathName: `/v1/cryptocurrency/info`,
+              method: 'POST',
+              body: {
+                id: '{listings.responseBody.data[0].id}',
+                test: 'test',
+                deeper: {
+                  muchDeeper: '{listings.responseBody.data[0].id}',
+                  muchMuchDeeper: [
+                    '{info.responseBody.data[0].symbol}',
+                    'test',
+                    '{listings.responseBody.data[0].id}',
+                  ]
+                }
+              },
+              headers: undefined,
+              query: {
+                id: '{listings.responseBody.data[0].id}',
+              },
+            },
+          }
         },
         infoTest: {
           pathName: `/v1/cryptocurrency/info/{listings.responseBody.data[0].id}`,

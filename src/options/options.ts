@@ -61,6 +61,7 @@ export interface Response {
   responseBody: any;
   requestBody: any;
   status: number;
+  query: Query;
   url: string;
 }
 

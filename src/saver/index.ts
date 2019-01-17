@@ -10,6 +10,7 @@ export class Saver {
     'requestHeaders',
     'responseBody',
     'requestBody',
+    'query',
   ];
 
   buildMocksPath(): string {
