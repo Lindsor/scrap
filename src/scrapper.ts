@@ -2,16 +2,23 @@ import { Option, CallMap, Calls, CallOption, RequestMethod, Headers, Response } 
 import { Options } from './options/index';
 import { Replacer } from './replacer';
 import { Fetcher } from './fetcher';
+import { Saver } from './saver';
 
 export class Scrapper {
 
   private config: Options;
   private fetcher: Fetcher = new Fetcher();
   private replacer: Replacer = new Replacer();
+  private saver: Saver = new Saver();
   private callMap: CallMap = {};
 
   constructor(options: Option) {
     this.config = new Options(options);
+  }
+
+  scrapAndSaveApi(): Promise<CallMap> {
+    return this.scrapApi()
+      .then(callMap => this.saver.save(callMap));
   }
 
   resetCallMap(): CallMap {
@@ -63,7 +70,6 @@ export class Scrapper {
   saveCallEntry(callId: string, response: Response, callMap: CallMap): Response {
 
     callMap[callId] = response;
-    console.log(`Save: ${callId}`);
 
     return response;
   }

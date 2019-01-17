@@ -1,10 +1,10 @@
 import { get } from 'lodash';
 import { CallMap, CallMapPath, CallMapOption } from '../options/options';
-let done = false;
+
 export class Replacer {
 
-  public static FULL_REPLACE_REGEX: RegExp = /^{.+}$/;
-  public static PARAM_REGEX: RegExp = /{(.+)}/g;
+  public static readonly FULL_REPLACE_REGEX: RegExp = /^{.+}$/;
+  public static readonly PARAM_REGEX: RegExp = /{(.+)}/g;
 
   replace(object: any, callMap: CallMap): any {
 

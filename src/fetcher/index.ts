@@ -29,12 +29,13 @@ export class Fetcher {
       .then((response: FetchResponse) => response.json()
         .then((responseBody: any) => {
 
+          const responseHeaders: Headers = this.convertHeaders(response.headers);
           const status: number = response.status;
 
           console.info(`${method} (${status}) - ${url}`);
 
           return {
-            responseHeaders: this.convertHeaders(response.headers),
+            responseHeaders,
             requestHeaders,
             responseBody,
             requestBody,

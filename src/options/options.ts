@@ -71,6 +71,12 @@ export interface CallMapPath {
 
 export interface CallMapOption extends Response {}
 
+export interface MetaCallMap {
+  [callId: string]: {
+    savePath: string;
+  };
+}
+
 export interface CallMap {
   [callId: string]: CallMapOption;
 }

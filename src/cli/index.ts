@@ -63,7 +63,7 @@ const scrapper: Scrapper = new Scrapper({
 });
 
 console.log('');
-scrapper.scrapApi()
+scrapper.scrapAndSaveApi()
   .then(res => {
 
     // const logEntry: any = res
