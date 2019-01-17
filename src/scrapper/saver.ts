@@ -37,13 +37,13 @@ export class Saver {
           if (callData.responseHeaders) {
             const responseHeadersPath = path.resolve(dataRootPath, 'response-headers.json');
             const responseHeaders = JSON.stringify(callData.responseHeaders, undefined, 2);
-            fs.outputFile(responseHeadersPath, responseHeaders);
+            writes.push(fs.outputFile(responseHeadersPath, responseHeaders));
           }
 
           if (callData.requestHeaders) {
             const requestHeadersPath = path.resolve(dataRootPath, 'request-headers.json');
             const requestHeaders = JSON.stringify(callData.requestHeaders, undefined, 2);
-            fs.outputFile(requestHeadersPath, requestHeaders);
+            writes.push(fs.outputFile(requestHeadersPath, requestHeaders));
           }
 
           return Promise.all(writes);

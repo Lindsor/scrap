@@ -39,13 +39,14 @@ export class Fetcher {
             calls[id].responseBody = responseBody;
             // console.log(JSON.stringify(responseBody, undefined, 2));
             // TODO: Delete this
-            if (!!responseBody.error) {
+            if (response.status >= 400 || !!responseBody.error) {
               console.log(`FAILED - ${requestLogLine}`);
               console.log(JSON.stringify(responseBody, undefined, 2));
+              // process.exit(1);
             }
+            console.log('');
             console.log('#################################################################################################################');
-            console.log('#################################################################################################################');
-            console.log('#################################################################################################################');
+            console.log('');
 
             return response;
           });
