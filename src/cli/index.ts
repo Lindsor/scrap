@@ -17,6 +17,20 @@ const scrapper: Scrapper = new Scrapper({
         convert: 'USD',
       },
       calls: {
+        info2: {
+          pathName: `/v1/cryptocurrency/info`,
+          method: 'GET',
+          body: undefined,
+          headers: undefined,
+          query: {
+            id: '{listings.responseBody.data[1].id}',
+            test: '4',
+          },
+          savePathIdentifiers: [
+            'query.id',
+            'query.test',
+          ]
+        },
         info: {
           pathName: `/v1/cryptocurrency/info`,
           method: 'GET',
@@ -24,7 +38,12 @@ const scrapper: Scrapper = new Scrapper({
           headers: undefined,
           query: {
             id: '{listings.responseBody.data[0].id}',
+            test2: '5'
           },
+          savePathIdentifiers: [
+            'query.id',
+            'query.test2',
+          ],
           calls: {
             infoPostTest: {
               pathName: `/v1/cryptocurrency/info`,

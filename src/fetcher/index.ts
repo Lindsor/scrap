@@ -21,6 +21,12 @@ export class Fetcher {
     return qs.parse(url.search);
   }
 
+  convertPathName(urlString: string): string {
+    const url: URL = new URL(urlString);
+
+    return url.pathname;
+  }
+
   fetch(
     url: string,
     method: RequestMethod,
@@ -40,6 +46,7 @@ export class Fetcher {
 
           const responseHeaders: Headers = this.convertHeaders(response.headers);
           const query: Query = this.convertQuery(url);
+          const pathName: string = this.convertPathName(url);
           const status: number = response.status;
 
           console.info(`${method} (${status}) - ${url}`);
@@ -49,6 +56,7 @@ export class Fetcher {
             requestHeaders,
             responseBody,
             requestBody,
+            pathName,
             status,
             method,
             query,

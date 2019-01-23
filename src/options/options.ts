@@ -38,15 +38,16 @@ export interface Query {
 }
 
 export interface SimpleCallOption {
-  domain?: string;
   headers?: Headers;
+  domain?: string;
   calls?: Calls;
   query?: Query;
 }
 
 export interface CallOption extends SimpleCallOption {
-  pathName: string;
+  savePathIdentifiers?: string[];
   method: RequestMethod;
+  pathName: string;
   body?: any;
 }
 
@@ -60,6 +61,7 @@ export interface Response {
   method: RequestMethod;
   responseBody: any;
   requestBody: any;
+  pathName: string;
   status: number;
   query: Query;
   url: string;
@@ -70,11 +72,17 @@ export interface CallMapPath {
   path: string[];
 }
 
-export interface CallMapOption extends Response {}
+export interface CallMapOption extends Response {
+  savePathIdentifiers?: string[];
+}
 
 export interface MetaCallMap {
   [callId: string]: {
     savePath: string;
+    pathName: string;
+    savePathIdentifiers?: {
+      [identifierPath: string]: any;
+    };
   };
 }
 

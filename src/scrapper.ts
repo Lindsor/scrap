@@ -64,6 +64,12 @@ export class Scrapper {
       requestBody,
     )
       .then((response: Response) => this.saveCallEntry(callId, response, callMap))
+      .then((response: Response) => {
+
+        callMap[callId].savePathIdentifiers = callOption.savePathIdentifiers;
+
+        return response;
+      })
       .then(() => this.scrapCalls(callOption.calls, callMap));
   }
 
